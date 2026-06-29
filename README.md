@@ -33,7 +33,7 @@ Available in Polish and English.
 **XYZ Targeting Mode**
 ![XYZ Mode](screenshots/xyz-mode.png)
 
----
+<br clear="all">
 
 **Manual Mode**
 ![Manual Mode](screenshots/manual-mode.png)
