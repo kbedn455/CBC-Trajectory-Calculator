@@ -62,7 +62,7 @@ Velocity formula: `V = (powder × 40 + cartridge_vel) / 20` [blocks/tick]
 
 Open `index.html` in any browser. No installation required.
 
-Or use the live version on [GitHub Pages](https://kbedn455.github.io/cbc-calculator).
+Or use the live version on [GitHub Pages](https://kbedn455.github.io/CBC-Trajectory-Calculator/).
 
 ### XYZ Mode
 
