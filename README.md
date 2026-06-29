@@ -64,7 +64,7 @@ Or use the live version on [GitHub Pages](https://kbedn455.github.io/cbc-calcula
 
 ### Manual Mode
 
-Select material, projectile, charges, pitch and cannon height to preview the trajectory.
+Select material, projectile, charges, pitch and cannon height to preview the trajectory. Cannon height is based on the height of a cannon parts above the ground.
 
 ## File Structure
 
