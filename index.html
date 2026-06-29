@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CBC Ballistic Calculator — Create Big Cannons 5.11.3</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="left">
+    <div>
+      <h1 data-i18n="title">CBC Ballistic Calculator</h1>
+      <p data-i18n="subtitle">Create Big Cannons 5.11.3 — fizyka: sashafiesta, kalibracja empiryczna</p>
+    </div>
+  </div>
+  <div class="lang-select">
+    <button class="lang-btn" id="lang-en" onclick="setLang('en')">
+      <span class="lang-flag">&#127468;&#127463;</span> EN
+    </button>
+    <button class="lang-btn active" id="lang-pl" onclick="setLang('pl')">
+      <span class="lang-flag">&#127477;&#127473;</span> PL
+    </button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" id="tab-target" onclick="switchTab('target', event)" data-i18n="tab_xyz">Celowanie XYZ</button>
+    <button class="tab" id="tab-manual" onclick="switchTab('manual', event)" data-i18n="tab_manual">Manualny</button>
+  </div>
+
+  <!-- TAB: CELOWANIE XYZ -->
+  <div id="panel-target" class="panel active">
+
+    <div class="card">
+      <div class="card-title" data-i18n="cannon_pos">Pozycja dziala</div>
+      <div class="xyz">
+        <div><label data-i18n="x_cannon">X (Cannon Mount)</label><input type="number" id="cx" placeholder="-1" oninput="calc()"></div>
+        <div><label data-i18n="y_cannon">Y (Cannon Mount)</label><input type="number" id="cy" placeholder="67" oninput="calc()"></div>
+        <div><label data-i18n="z_cannon">Z (Cannon Mount)</label><input type="number" id="cz" placeholder="-15" oninput="calc()"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" data-i18n="target_pos">Pozycja celu</div>
+      <div class="xyz">
+        <div><label data-i18n="x_target">X (cel)</label><input type="number" id="tx" placeholder="-148" oninput="resetCorr(); calc()"></div>
+        <div><label data-i18n="y_target">Y (cel)</label><input type="number" id="ty" placeholder="64"   oninput="resetCorr(); calc()"></div>
+        <div><label data-i18n="z_target">Z (cel)</label><input type="number" id="tz" placeholder="351"  oninput="resetCorr(); calc()"></div>
+      </div>
+      <div class="corr-row">
+        <button class="btn-corr" id="corr-btn" onclick="applyCorr()" data-i18n="corr_btn">Korekta Y celu (-25)</button>
+        <span class="corr-info" id="corr-info"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" data-i18n="charges">Ladunki</div>
+
+      <div class="charge-block">
+        <div class="charge-block-title" data-i18n="powder_title">Powder Charge</div>
+        <div class="charge-inner">
+          <div class="slider-row">
+            <label data-i18n="quantity">Ilosc</label>
+            <input type="range" id="t-pow" min="0" max="32" step="1" value="0"
+              oninput="document.getElementById('tp-out').textContent=this.value; calc()">
+            <span class="val" id="tp-out">0</span>
+          </div>
+          <div class="info-row">
+            <span data-i18n="velocity_per">Predkosc/szt:</span>
+            <span style="color:var(--green)">+40 m/s</span>
+            &nbsp;|&nbsp;
+            <span data-i18n="stress_per">Stres/szt:</span>
+            <span style="color:var(--accent)">+1.0</span>
+            &nbsp;|&nbsp;
+            <span data-i18n="total_velocity">Lacznie:</span>
+            <span style="color:var(--green)" id="t-pow-total">+0 m/s</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="charge-block">
+        <div class="charge-block-title" data-i18n="cart_title">Big Cartridge</div>
+        <div class="charge-inner">
+          <div class="slider-row">
+            <label data-i18n="cart_use">Uzyj Big Cartridge</label>
+            <input type="checkbox" id="t-cart" checked onchange="updateCartInfo('t'); calc()"
+              style="width:18px; height:18px; accent-color:var(--accent); cursor:pointer;">
+          </div>
+          <div class="charge-row2">
+            <div>
+              <label data-i18n="power_level">Power (poziom ladunku)</label>
+              <select id="t-power" onchange="updateCartInfo('t'); calc()">
+                <option value="1">Power 1 — 40 m/s, stres 0.5</option>
+                <option value="2">Power 2 — 80 m/s, stres 1.0</option>
+                <option value="3">Power 3 — 120 m/s, stres 1.5</option>
+                <option value="4" selected>Power 4 — 160 m/s, stres 2.0</option>
+              </select>
+            </div>
+            <div style="text-align:right">
+              <div class="info-row" data-i18n="total_velocity">Lacznie predkosci:</div>
+              <div style="font-size:18px; font-weight:700; color:var(--green)" id="t-cart-total">+160 m/s</div>
+              <div class="info-row">
+                <span data-i18n="total_stress">Lacznie stresu:</span>
+                <span id="t-cart-stress" style="color:var(--accent)">2.0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="w-input"    class="warn"        data-i18n="w_input">Uzupelnij wszystkie wspolrzedne i dodaj co najmniej jeden ladunek.</div>
+    <div id="w-pitch"    class="warn"        data-i18n="w_pitch">Kat pitch poza zakresem CBC (-30 do 60). Zmien liczbe ladunkow lub odleglosc.</div>
+    <div id="w-ricochet" class="warn-yellow" data-i18n="w_rico">Pitch ponizej 15 — wysokie ryzyko rykoszetu.</div>
+    <div id="w-jam"      class="warn"        data-i18n="w_jam">Przekroczono limit ladunkow dla tego materialu.</div>
+
+    <div class="results" id="results">
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label" data-i18n="distance">Odleglosc</div>
+          <div class="metric-value" id="r-dist">—<span class="metric-unit"> bl</span></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label" data-i18n="flight_time">Czas lotu</div>
+          <div class="metric-value" id="r-time">—<span class="metric-unit"> tick</span></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label" data-i18n="fuze">Fuze</div>
+          <div class="metric-value" id="r-fuze">—<span class="metric-unit"> tick</span></div>
+        </div>
+      </div>
+
+      <div class="grid2" style="gap:10px; margin-bottom:10px;">
+        <div>
+          <div class="section-label" data-i18n="yaw">Yaw (obrot poziomy)</div>
+          <div class="angle-opts">
+            <div class="angle-opt" id="y-lo">
+              <div class="angle-opt-label" data-i18n="lower">Nizszy</div>
+              <div class="angle-opt-val" id="y-lo-v">—</div>
+              <div class="angle-opt-sub" id="y-lo-s"></div>
+            </div>
+            <div class="angle-opt" id="y-hi">
+              <div class="angle-opt-label" data-i18n="higher">Wyzszy</div>
+              <div class="angle-opt-val" id="y-hi-v">—</div>
+              <div class="angle-opt-sub" id="y-hi-s"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="section-label" data-i18n="pitch">Pitch (kat strzalu)</div>
+          <div class="angle-opts">
+            <div class="angle-opt" id="p-lo">
+              <div class="angle-opt-label" data-i18n="lower">Nizszy</div>
+              <div class="angle-opt-val" id="p-lo-v">—</div>
+              <div class="angle-opt-sub" id="p-lo-s"></div>
+            </div>
+            <div class="angle-opt" id="p-hi">
+              <div class="angle-opt-label" data-i18n="higher">Wyzszy</div>
+              <div class="angle-opt-val" id="p-hi-v">—</div>
+              <div class="angle-opt-sub" id="p-hi-s"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-row" id="r-dy"></div>
+      <div class="info-row" id="r-corr-note" style="display:none; color:var(--accent);" data-i18n="corr_note">
+        Korekta Y aktywna — pocisk uderzy ~25 blokow przed celem.
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: MANUALNY -->
+  <div id="panel-manual" class="panel">
+
+    <div class="card">
+      <div class="card-title" data-i18n="configuration">Konfiguracja</div>
+      <div class="grid2" style="margin-bottom:12px;">
+        <div>
+          <label data-i18n="material">Material dziala</label>
+          <select id="m-mat" onchange="calcM()">
+            <option value="log">Log (max 1 Powder)</option>
+            <option value="wrought">Wrought Iron (max 2 Powder)</option>
+            <option value="cast">Cast Iron (max 3 Powder)</option>
+            <option value="bronze">Bronze (max 4 Powder)</option>
+            <option value="steel" selected>Steel (max 6 Powder)</option>
+            <option value="nether">Nethersteel (max 32 Powder)</option>
+          </select>
+        </div>
+        <div>
+          <label data-i18n="projectile">Pocisk</label>
+          <select id="m-proj" onchange="calcM()">
+            <option value="he" selected>HE Shell</option>
+            <option value="ap">AP Shot / AP Shell</option>
+            <option value="solid">Solid Shot</option>
+            <option value="mortar">Mortar Stone (max 120 m/s)</option>
+            <option value="grape">Bag of Grapeshot</option>
+            <option value="shrapnel">Shrapnel Shell</option>
+            <option value="fluid">Fluid Shell</option>
+            <option value="smoke">Smoke Shell</option>
+            <option value="drop">Drop Mortar</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="charge-block">
+        <div class="charge-block-title" data-i18n="powder_title">Powder Charge</div>
+        <div class="charge-inner">
+          <div class="slider-row">
+            <label data-i18n="quantity">Ilosc</label>
+            <input type="range" id="m-pow" min="0" max="32" step="1" value="0"
+              oninput="document.getElementById('mp-out').textContent=this.value; calcM()">
+            <span class="val" id="mp-out">0</span>
+          </div>
+          <div class="info-row">
+            <span data-i18n="total_velocity">Lacznie:</span>
+            <span style="color:var(--green)" id="m-pow-total">+0 m/s</span>
+            &nbsp;|&nbsp;
+            <span data-i18n="total_stress">Stres:</span>
+            <span style="color:var(--accent)" id="m-pow-stress">0.0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="charge-block">
+        <div class="charge-block-title" data-i18n="cart_title">Big Cartridge</div>
+        <div class="charge-inner">
+          <div class="slider-row">
+            <label data-i18n="cart_use">Uzyj Big Cartridge</label>
+            <input type="checkbox" id="m-cart" checked onchange="updateCartInfo('m'); calcM()"
+              style="width:18px; height:18px; accent-color:var(--accent); cursor:pointer;">
+          </div>
+          <div class="charge-row2">
+            <div>
+              <label data-i18n="power_level">Power (poziom ladunku)</label>
+              <select id="m-power" onchange="updateCartInfo('m'); calcM()">
+                <option value="1">Power 1 — 40 m/s, stres 0.5</option>
+                <option value="2">Power 2 — 80 m/s, stres 1.0</option>
+                <option value="3">Power 3 — 120 m/s, stres 1.5</option>
+                <option value="4" selected>Power 4 — 160 m/s, stres 2.0</option>
+              </select>
+            </div>
+            <div style="text-align:right">
+              <div class="info-row" data-i18n="total_velocity">Lacznie predkosci:</div>
+              <div style="font-size:18px; font-weight:700; color:var(--green)" id="m-cart-total">+160 m/s</div>
+              <div class="info-row">
+                <span data-i18n="total_stress">Stres:</span>
+                <span id="m-cart-stress" style="color:var(--accent)">2.0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slider-row">
+        <label data-i18n="pitch_angle">Kat pitch</label>
+        <input type="range" id="m-angle" min="-30" max="60" step="1" value="31"
+          oninput="document.getElementById('ma-out').textContent=this.value+'°'; calcM()">
+        <span class="val" id="ma-out">31°</span>
+      </div>
+      <div class="slider-row">
+        <label data-i18n="height">Wysokosc nad ziemia</label>
+        <input type="range" id="m-height" min="1" max="20" step="1" value="3"
+          oninput="document.getElementById('mh-out').textContent=this.value+' bl'; calcM()">
+        <span class="val" id="mh-out">3 bl</span>
+      </div>
+    </div>
+
+    <div id="m-warn-jam"      class="warn"        data-i18n="w_jam">Przekroczono limit ladunkow dla wybranego materialu.</div>
+    <div id="m-warn-mortar"   class="warn"        data-i18n="w_mortar">Mortar Stone dezintegruje sie powyzej 120 m/s.</div>
+    <div id="m-warn-rico"     class="warn-yellow" data-i18n="w_rico">Pitch ponizej 15 — ryzyko rykoszetu.</div>
+    <div id="m-warn-nocharge" class="warn-yellow" data-i18n="w_nocharge">Dodaj co najmniej jeden Powder Charge lub Big Cartridge aby wyswietlic trajektorie.</div>
+
+    <div class="card" style="margin-top:1rem;">
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label" data-i18n="velocity">Predkosc</div>
+          <div class="metric-value" id="m-vel">—<span class="metric-unit"> m/s</span></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label" data-i18n="range">Zasieg</div>
+          <div class="metric-value" id="m-range">—<span class="metric-unit"> blokow</span></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label" data-i18n="max_height">Maks. wys.</div>
+          <div class="metric-value" id="m-maxh">—<span class="metric-unit"> blokow</span></div>
+        </div>
+      </div>
+      <div class="max-range-bar" id="m-maxbar">
+        <span data-i18n="max_range">Maks. zasieg przy tym V:</span>
+        <span class="val" id="m-maxrange">—</span>
+        <span data-i18n="blocks">blokow</span>
+        (<span data-i18n="optimal_angle">kat optymalny:</span>
+        <span id="m-maxangle">—</span>°)
+      </div>
+    </div>
+
+    <div style="position:relative; width:100%; height:240px; margin-top:1rem;">
+      <canvas id="m-chart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  CBC Ballistic Calculator — CBC 5.11.3 &nbsp;|&nbsp;
+  <span data-i18n="physics_credit">Fizyka:</span>
+  <a href="https://discord.gg/vgfMMUUgvT" target="_blank">sashafiesta @ CBC Discord</a>
+  &nbsp;|&nbsp; drag=0.99/tick · gravity=0.05 bl/tick²
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/physics.js"></script>
+<script src="js/ui.js"></script>
+
+</body>
+</html>
