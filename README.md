@@ -30,13 +30,21 @@ Available in Polish and English.
 
 ## Screenshots
 
+<div>
+
 **XYZ Targeting Mode**
+
 ![XYZ Mode](screenshots/xyz-mode.png)
 
-<br clear="all">
+</div>
+
+<div>
 
 **Manual Mode**
+
 ![Manual Mode](screenshots/manual-mode.png)
+
+</div>
 
 ## Physics
 
